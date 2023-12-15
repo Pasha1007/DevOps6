@@ -79,22 +79,25 @@ Vagrant.configure("2") do |config|
   # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
   # documentation for more information about their specific syntax and use.
    config.vm.provision "shell", inline: <<-SHELL
-      pvcreate /dev/sdc /dev/sdd /dev/sde /dev/sdf
+    parted /dev/sdb --script mklabel gpt mkpart primary ext4 0% 100%
+    parted /dev/sdc --script mklabel gpt mkpart primary ext4 0% 100%
+    parted /dev/sdd --script mklabel gpt mkpart primary ext4 0% 100%
+    parted /dev/sde --script mklabel gpt mkpart primary ext4 0% 100%
 
-      vgcreate vg00 /dev/sdc /dev/sdd /dev/sde /dev/sdf
-        
-      lvcreate -l 100%FREE vg00 /dev/sdc /dev/sdd -n lv1
-      lvcreate -l 100%FREE vg00 /dev/sde /dev/sdf -n lv2
-      
-      mkfs.ext4 /dev/vg00/lv1  
-      mkfs.ext4 /dev/vg00/lv2
-      
-      mkdir /mnt/vol0 /mnt/vol1
-          
-      echo '/dev/vg00/lv1 /mnt/vol0 ext4 defaults 0 0' >>/etc/fstab
-      echo '/dev/vg00/lv2 /mnt/vol1 ext4 defaults 0 0' >>/etc/fstab
-      
-      mount -a
+    pvcreate /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+    vgcreate vg00 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+
+    lvcreate -L 800M vg00 -n lv1
+    lvcreate -l 100%FREE vg00 -n lv2
+
+    mkfs.ext4 /dev/vg00/lv1
+    mkfs.ext4 /dev/vg00/lv2
+
+    mkdir /mnt/vol0 /mnt/vol1
+    echo '/dev/vg00/lv1 /mnt/vol0 ext4 defaults 0 0' >> /etc/fstab
+    echo '/dev/vg00/lv2 /mnt/vol1 ext4 defaults 0 0' >> /etc/fstab
+
+    mount -a
     SHELL
   end
 end
